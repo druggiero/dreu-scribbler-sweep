@@ -14,22 +14,24 @@ class Intersection(object):
         self.num = n
         self.kind = roomOrHall
         self.explored = False
-        self.markedForExploration = False #not sure you need this at all, kind of emulates beacons though. might get rid of this
+        self.beingExplored = False
         self.intersInRange = [self] # can I do this? I think I can. Check later if this causes problems down the road
         self.robotsPresent = []
 
     def getInRange(self):
         return self.intersInRange
 
-    def markForExploration(self):
-        #again, potentially uneeded. Intersection itself probably doesn't need to know that a robot is being called to explore it
-        self.markedForExploration = True
-
     def addRobot(self, robot):
         #simply adds a robot to the list of robots currently stationed at an intersection
         #this is called by a robot when its location is set with RobotObject.setLocation()
         self.robotsPresent.append(robot)
 
+    def isExplored(self):
+        return self.explored
+    
+    def markAsExploring(self):
+        self.beingExplored = True
+    
     def getRobots(self):
         #returns list of robots at intersection, used by Robot to find neighboring robots to whom it can send messages 
         return self.robotsPresent
@@ -38,7 +40,7 @@ class Intersection(object):
         #will be set when robot finishes exploring intersection--when this happens will be determined by main loop I believe
         #tricky part comes when you have hallways and rooms interacting--for rooms it is easy but hallways a bit more complicated
         self.explored = True
-        self.markedForExploration = False #might delete
+        self.beingExplored = False
     
     def setInRange(self,otherIntersection): 
         #this has to be done by hand in controller, one by one. 
@@ -48,6 +50,14 @@ class Intersection(object):
 
     def getNum(self):
         return self.num
+        
+    def __cmp__(self,otherIntersection):
+        if self.num < otherIntersection.getNum():
+            return -1
+        elif self.num > otherIntersection.getNum():
+            return 1
+        else:
+            return 0
     
     def neighborListToString(self):
         string = ''

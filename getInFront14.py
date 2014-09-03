@@ -1,20 +1,22 @@
 from Myro import *
 import FindSign73
+from timeit import default_timer #debug
+
+#have not yet figured out how to deal with not seeing the green sign at first
 
 findSign = FindSign73
 
 def main():
-    practice()
-    #small = calibrate("small", 2)
-    #big = calibrate("big", 2)
-    small = 17
-    big = 36
-##     for i in range(3):
-##         beep(1, 1200)
-##     wait(10)
-##     for i in range(3):
-##         beep(1, 1000)
-    #aAndM(look(), small, big)
+    timer = default_timer()
+    #tester()
+    #practice()
+    
+    small = calibrate("small", 3)
+    big = calibrate("big", 3)
+    #small = 17
+    #big = 36
+    aAndM(look(), small, big)
+    print("getInFront: main: program took", default_timer - timer)
 
 def look():
     setPicSize("small")
@@ -43,6 +45,23 @@ def look():
     #print("look:", findSign.getBlobs(bwBlob)[1])
     return goodLook
     
+def reverseTurnToTarget(middle, target, smallTurnAmt, bigTurnAmt):
+    off = dD(middle, target)
+    print("turnToTarget: off by ", off)
+    bigTurns = round(off/bigTurnAmt)
+    print("turnToTarget:", middle, target, off, bigTurns)
+    #beep(1, 800)
+    myTurnRight("big", -bigTurns)
+    #beep(1, 600)
+    smalloff = off%bigTurnAmt
+    print("turnToTarget: off, ", off, "bigTurnAmt", bigTurnAmt, "smalloff", smalloff)
+    smallTurns = round(smalloff/smallTurnAmt)
+    #beep(1, 1200)
+    myTurnRight("small", -smallTurns)
+    #beep(1, 1000)
+    print("turnToTarget: smallTurns is ", smallTurns) #debug
+    
+    
 def turnToTarget(middle, target, smallTurnAmt, bigTurnAmt): #turns so that the target is in the middle of the picture
     off = dD(middle, target)
     print("turnToTarget: off by ", off)
@@ -51,7 +70,8 @@ def turnToTarget(middle, target, smallTurnAmt, bigTurnAmt): #turns so that the t
     #beep(1, 800)
     myTurnRight("big", bigTurns)
     #beep(1, 600)
-    smalloff = (off/bigTurnAmt)%bigTurnAmt
+    smalloff = off%bigTurnAmt
+    print("turnToTarget: off, ", off, "bigTurnAmt", bigTurnAmt, "smalloff", smalloff)
     smallTurns = round(smalloff/smallTurnAmt)
     #beep(1, 1200)
     myTurnRight("small", smallTurns)
@@ -59,25 +79,59 @@ def turnToTarget(middle, target, smallTurnAmt, bigTurnAmt): #turns so that the t
     print("turnToTarget: smallTurns is ", smallTurns) #debug
 
 def checkForWalls(pic, smallTurn, bigTurn, smallForward): #returns 0 if there are walls and adjusts, returns 1 if no walls
-    checkAmt = 100
+    checkAmt = 150
     width = getWidth(pic)
     middle = width/2
-    turnToTarget(width-checkAmt, middle, smallTurn, bigTurn) #turns right and looks out of the corner of its eye
+    target = width-checkAmt
+    off = dD(middle, target)
+    print("checkForWalls: off", off)
+    print("checkForWalls: turning first time")
+    turnToTarget(middle, target, smallTurn, bigTurn) #turns right and looks out of the corner of its eye
     pic = look()
     if setTarget(pic) == width:
-        turnToTarget(checkAmt, middle, smallTurn, bigTurn) #undoes the last turn
-        turnToTarget(360, 0, middle, smallTurn, bigTurn)
+        print("checkForWalls: saw wall to right, readjusting")
+        print("checkForWalls: undoing last turn")
+        reverseTurnToTarget(middle, target, smallTurn, bigTurn) #undoes the last turn
+        print("checkForWalls: last turn undone")
+        print("checkForWalls: turning left 90 deg")
+        turnToTarget(360, 0, smallTurn, bigTurn) #turns 90 deg left
+        print("checkForWalls: turned left 90 deg")
+        print("checkForWalls: going forwards")
         for i in range(int(smallForward)):
-            backward(1, .1)
+            forward(1, .1)
+        print("checkForWalls: turning right 90 deg")    
+        turnToTarget(0, 360, smallTurn, bigTurn) #turns 90 deg right
+        print("checkForWalls: turned right 90 deg")
         return 0
-    turnToTarget(checkAmt, middle, smallTurn, bigTurn) #undoes the last turn
-    turnToTarget(checkAmt, middle, smallTurn, bigTurn) #turns left and looks out of corner of eye
+    print("checkForWalls: undoing last turn")
+    reverseTurnToTarget(middle, target, smallTurn, bigTurn) #undoes the last turn
+    print("checkForWalls: last turn undone")
+    target = checkAmt
+    off = dD(middle, checkAmt)
+    show(takePicture())
+    turnToTarget(middle, target, smallTurn, bigTurn) #turns left and looks out of corner of eye
     pic = look()
     if setTarget(pic) == width:
+        print("checkForWalls: saw wall to left, readjusting")
+        print("checkForWalls: undoing last turn")
+        reverseTurnToTarget(middle, target, smallTurn, bigTurn) #undoes the last turn
+        show(takePicture())
+        print("checkForWalls: last turn undone")
+        print("checkForWalls: turning right 90 deg")    
+        turnToTarget(0, 360, smallTurn, bigTurn) #turns 90 deg right
+        print("checkForWalls: turned right 90 deg")
+        print("checkForWalls: going forwards")
         for i in range(int(smallForward)):
-            backward(1, .1)
+            forward(1, .1)
+        print("checkForWalls: turning left 90 deg")
+        turnToTarget(360, 0, smallTurn, bigTurn) #turns 90 deg left
+        print("checkForWalls: turned left 90 deg")
         return 0
-    turnToTarget(middle*2-checkAmt, middle, smallTurn, bigTurn)
+    print("checkForWalls: undoing last turn")
+    reverseTurnToTarget(middle, target, smallTurn, bigTurn) #undoes the last turn
+    show(takePicture())
+    print("checkForWalls: last turn undone")
+    print("checkForWalls: safe to go!")
     return 1
         
 
@@ -96,7 +150,7 @@ def aAndM(pic, smallTurnAmt, bigTurnAmt): #short for analyzeAndmove: figures out
                 calibCounter = calibCounter + 1
             else:
                 calibCounter = 0
-            if calibCounter > 3:
+            if calibCounter > 3 and off > 50 or calibCounter > 5:
                 print("Not finding target: going to calibrate")
                 smallTurnAmt = calibrate("small", 2)
                 if smallTurnAmt == 0:
@@ -114,7 +168,7 @@ def aAndM(pic, smallTurnAmt, bigTurnAmt): #short for analyzeAndmove: figures out
             pic = look()
             off = dD(middle, setTarget(pic))
             
-        print("checking for walls")    
+        print("\n aAndM: Checking for walls! \n")    
         charge = checkForWalls(pic, smallTurnAmt, bigTurnAmt, 2)
         pic = look()
         off = dD(middle, setTarget(pic))    
@@ -170,7 +224,7 @@ def calibrate(size, amnt): #calibrates the motors to turn a specific amount
             pic = look()    
             target_two = setTarget(pic)
             if target_two != getWidth(pic):
-                if (abs(target_two-target_one) < 1000):
+                if (abs(target_two-target_one) < 100):
                     diffs.append(abs(target_two-target_one))
                     print("calibrate: change was", abs(target_two-target_one))
                 else:
@@ -212,5 +266,22 @@ def practice():
     newtarget = setTarget(newpic)
     print("practice: target is now", newtarget)
     show(newpic)
-    print("practice: change was:", newtarget-target)       
+    print("practice: change was:", newtarget-target)
+    
+def tester():
+    print("in tester")
+    pic = takePicture()
+    show(pic)
+    myTurnRight("big", 5)
+    myTurnRight("small", -1)
+    wait(2)
+    myTurnRight("big", -5)
+    myTurnRight("small", 1)
+    pic = takePicture()
+    turnToTarget(360, 0, 20, 50)
+    wait(1)
+    reverseTurnToTarget(360, 0, 20, 50)
+    
+    show(pic) 
+           
 main()

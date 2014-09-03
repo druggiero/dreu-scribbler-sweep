@@ -6,4 +6,4 @@ class Behavior(object):
 
     def __init__(self, robotObject):
         self.robot = robotObject
-        #like can i reference this shit this way? I'm actually not sure. like do i have to make a new Robot? i don't want to do that./
+        
