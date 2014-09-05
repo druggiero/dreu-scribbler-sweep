@@ -1,10 +1,10 @@
 from Myro import *
-import FindSign73
+import FindSign82
 from timeit import default_timer #debug
 
 #have not yet figured out how to deal with not seeing the green sign at first
 
-findSign = FindSign73
+findSign = FindSign82
 
 def main():
     timer = default_timer()
